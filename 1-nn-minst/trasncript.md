@@ -1,4 +1,6 @@
-# Prologue
+# Neural Network CH.1 MINST
+
+## Prologue
 
 Before we talk about Neural Networks. We should first think about the minimal unit of the Neural Network: the Neuron.
 
@@ -15,7 +17,7 @@ A neuron accepts multiple inputs and outputs a single value through the mathemat
 
 To be noticed, this neuron is not biological neuron, it is merely inspired by how biological brains work.
 
-# MINST
+## MINST
 
 why neural networks are so special? One reason for that is neural networks are trainable.
 
@@ -51,8 +53,6 @@ The simplest method is pixel similarity.
 
 (Switch to Google colab)
 
-We load the training and test datasets, which come in as rank-3 tensors. The test set dimensions are displayed here. It contains so many test images.
-
 To prepare the data, we combine the images into a rank-3 tensor using torch.stack,  and normalize the pixel values from a 0-255 range down to a 0-1 scale.
 
 then we apply the mean function across all training images to calculate the average pixel value for each position. this is the perfect number 3 and perfect number 7 according to our calculation.
@@ -72,11 +72,6 @@ But anyway, let's look at the results. Our simple pixel similarity algorithm get
 
 But there's a catch. This is a completely fixed pattern. It's just memorizing an average. What if we want a system that can actually improve and learn by itself?
 
-
-# Neural Network
-
-
-
 ## Loss Function
 
 Loss function or cost function is to quantify how well we're achieving this goal
@@ -89,11 +84,75 @@ Here, w denotes all the weights of the neural network, b all the biases. n is th
 
 Our goal in training a neural network is to find weights and biases which minimize the quadratic cost function  C(w,b)
 
-# SGD
+## SGD
 
-To make a system that actually learns, we need to introduce one of the most important concepts in machine learning: Gradient Descent.
+How to minimize the cost function, the answer is: Gradient Descent.
 
-# Good learning resources
+Imagine you're standing somewhere on a mountain.
+You want to reach the lowest point in the valley.
+
+But there's a problem. It's dark. You can't see the whole mountain.
+
+The only information available is the slope beneath your feet.
+
+If the ground slopes downward to the left, you take a step left. If it slopes downward to the right, you step right.
+
+By repeatedly moving in the direction of steepest descent, you will gradually approach the bottom of the valley.
+
+Suppose we have a squared function:
+
+$f(x)=x^2$
+
+The derivative tells us how rapidly the function changes at a particular point.
+
+$f'(x)=2x$
+
+At (x=3),
+
+$f'(3)=6$
+
+which means the function is increasing rapidly.
+
+At (x=-3),
+
+$f'(-3)=-6$
+
+which means the function decreases as we move to the right.
+
+so if Gradient is bigger than 0, we go left, if gradient is smaller than 0, we go right
+
+In higher dimensions, derivatives become gradients.
+
+Instead of a single number, the gradient is a vector containing the derivative with respect to every parameter.
+
+$\nabla C=
+\left(
+\frac{\partial C}{\partial w_1},
+\frac{\partial C}{\partial w_2},
+\cdots,
+\frac{\partial C}{\partial b}
+\right)$
+
+The learning rate determines how large each step will be.
+
+$w=w-\eta\frac{\partial C}{\partial w}$
+
+$b=b-\eta\frac{\partial C}{\partial b}$
+
+## Implementing the NN
+
+```python
+import numpy as np
+
+class NN:
+    def __init__(self, layer_sizes, seed=42):
+        self.layer_sizes = layer_sizes
+        self.num_layers = len(layer_sizes)
+        
+
+```
+
+## Good learning resources
 
 - http://neuralnetworksanddeeplearning.com/chap1.html
 - https://www.bilibili.com/video/BV18m411S79t
