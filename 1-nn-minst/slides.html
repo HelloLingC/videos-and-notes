@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Networks, Neurons & MNIST</title>
+    
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-primary: #000000;
+            --bg-secondary: #111111;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --accent: #ffffff;
+            --accent-glow: rgba(255, 255, 255, 0.3);
+            --accent-secondary: #aaaaaa;
+            --border: rgba(255, 255, 255, 0.15);
+            --success: #cccccc;
+            --warning: #888888;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Source Sans 3', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        /* Background decorative elements */
+        .bg-decoration {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-decoration::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            opacity: 0.4;
+        }
+
+        .bg-decoration::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+        }
+
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* Main presentation container */
+        .presentation {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            z-index: 2;
+        }
+
+        /* Slides container */
+        .slides-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Individual slide */
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 80px;
+            opacity: 0;
+            transform: translateX(60px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            visibility: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+            visibility: visible;
+        }
+
+        .slide.prev {
+            transform: translateX(-60px);
+        }
+
+        /* Slide content wrapper */
+        .slide-content {
+            width: 100%;
+            max-width: 1200px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Typography */
+        h1, h2, h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-size: clamp(1.8rem, 3.5vw, 3rem);
+            letter-spacing: -0.01em;
+            margin-bottom: 1.5rem;
+        }
+
+        h3 {
+            font-size: clamp(1.2rem, 2vw, 1.6rem);
+            font-weight: 500;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        p, li {
+            font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+            line-height: 1.7;
+            color: var(--text-secondary);
+            max-width: 75ch;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            position: relative;
+            padding-left: 1.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.6em;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Accent elements */
+        .accent-line {
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            border-radius: 2px;
+            margin: 1.5rem 0;
+        }
+
+        
+
+        /* Slide layouts */
+        .slide-title {
+            text-align: center;
+            align-items: center;
+        }
+
+        .slide-title h1 {
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide-title .subtitle {
+            font-size: clamp(1.2rem, 2vw, 1.6rem);
+            color: var(--text-secondary);
+            margin-top: 1rem;
+            font-weight: 300;
+        }
+
+        /* Math display */
+        .math-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem 3rem;
+            margin: 1.5rem 0;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .math-block .katex {
+            font-size: 1.3em;
+        }
+
+        .math-row {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .math-row .math-block {
+            flex: 1;
+            min-width: 280px;
+            max-width: 500px;
+        }
+
+        /* Image containers */
+        .image-container {
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .image-grid .image-container {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary);
+        }
+
+        .image-grid .image-container img {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+        }
+
+        .image-caption {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .image-large {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .image-large .image-container {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-large .image-container img {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+        }
+
+        /* Comparison layout */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            margin-top: 2rem;
+        }
+
+        .comparison-item {
+            text-align: center;
+        }
+
+        .comparison-item .image-container {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comparison-item .image-container img {
+            width: 85%;
+            height: 85%;
+            object-fit: contain;
+        }
+
+        .vs-divider {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            background: var(--bg-primary);
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 100px;
+            z-index: 10;
+        }
+
+        .comparison-wrapper {
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+
+        /* Two column layout */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        /* SGD placeholder special styling */
+        .placeholder-slide {
+            text-align: center;
+        }
+
+        .placeholder-slide .tbd-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 200px;
+            height: 200px;
+            border: 3px dashed var(--border);
+            border-radius: 24px;
+            margin: 2rem auto;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        /* Note / caveat box */
+        .note {
+            background: rgba(255, 255, 255, 0.08);
+            border-left: 4px solid var(--accent);
+            padding: 1.2rem 1.5rem;
+            border-radius: 0 12px 12px 0;
+            margin-top: 2rem;
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+        }
+
+        .note strong {
+            color: var(--accent);
+        }
+
+        /* Navigation */
+        .nav-controls {
+            display: none;
+        }
+
+        .nav-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            min-width: 60px;
+            text-align: center;
+            letter-spacing: 0.05em;
+        }
+
+        .slide-counter .current {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            transition: width 0.4s ease;
+            z-index: 100;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* Keyboard hint */
+        .keyboard-hint {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .keyboard-hint.visible {
+            opacity: 1;
+        }
+
+        /* Flowchart */
+        .flowchart {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .fc-node {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 0.9rem 1.1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            min-width: 100px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .fc-node .fc-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        .fc-node.fc-system {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.08);
+            padding: 1.1rem 1.5rem;
+        }
+
+        .fc-node.fc-system .fc-icon {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--accent);
+        }
+
+        .fc-node .fc-label {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .fc-arrow {
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            line-height: 1;
+            font-family: 'Space Grotesk', sans-serif;
+            user-select: none;
+        }
+
+        .fc-split {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .fc-outputs {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .fc-node.fc-out-3 {
+            border-color: rgba(200, 200, 200, 0.3);
+            background: rgba(200, 200, 200, 0.05);
+        }
+
+        .fc-node.fc-out-3 .fc-tag {
+            color: var(--success);
+        }
+
+        .fc-node.fc-out-7 {
+            border-color: rgba(150, 150, 150, 0.25);
+            background: rgba(150, 150, 150, 0.03);
+        }
+
+        .fc-node.fc-out-7 .fc-tag {
+            color: var(--warning);
+        }
+
+        .fc-thumb {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fc-thumb img {
+            width: 85%;
+            height: 85%;
+            object-fit: contain;
+        }
+
+        .fc-tag {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        /* We don't need consider responsive, this html always show in desktop */
+        @media (max-width: 900px) {
+        }
+
+        /* Animation for active slide children */
+        .slide.active .slide-content > * {
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+        }
+
+        .slide.active .slide-content > *:nth-child(1) { animation-delay: 0.1s; }
+        .slide.active .slide-content > *:nth-child(2) { animation-delay: 0.2s; }
+        .slide.active .slide-content > *:nth-child(3) { animation-delay: 0.3s; }
+        .slide.active .slide-content > *:nth-child(4) { animation-delay: 0.4s; }
+        .slide.active .slide-content > *:nth-child(5) { animation-delay: 0.5s; }
+        .slide.active .slide-content > *:nth-child(6) { animation-delay: 0.6s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            .slide {
+                position: relative;
+                opacity: 1;
+                transform: none;
+                pointer-events: all;
+                visibility: visible;
+                page-break-after: always;
+                height: 100vh;
+            }
+            .nav-controls, .progress-bar, .keyboard-hint, .bg-decoration, .grid-overlay {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-decoration"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="presentation">
+        <div class="slides-container" id="slidesContainer">
+
+            <!-- Slide 1: Title -->
+            <section class="slide active slide-title" data-slide="1">
+                <div class="slide-content" style="align-items: center;">
+                    <h1>Neural Networks CH.1</h1>
+                    <div class="accent-line"></div>
+                    <p class="subtitle">the MNIST</p>
+                    <p style="margin-top: 2rem; font-size: 1rem; color: var(--text-muted);">An introduction to the building blocks of deep learning</p>
+                </div>
+            </section>
+
+            <!-- Slide 2: The Neuron -->
+            <section class="slide" data-slide="2">
+                <div class="slide-content">
+                    <h2>The Neuron</h2>
+                    <ul style="margin-bottom: 1.5rem;">
+                        <li><strong>Trainable parameters</strong> (weights and bias)</li>
+                        <li>An <strong>activation function</strong></li>
+                    </ul>
+                    
+                    <div class="math-row">
+                        <div class="math-block">
+                            $$z = w_1 x_1 + w_2 x_2 + \cdots + w_n x_n + b$$
+                        </div>
+                        <div class="math-block">
+                            $$a = \sigma(z)$$
+                        </div>
+                    </div>
+
+                    <p style="margin-top: 1.5rem;">
+                        Multiple inputs → one output via an activation function (sigmoid, ReLU, tanh, …).
+                    </p>
+
+                    <div class="note">
+                        <strong>Note:</strong> Not a biological neuron — merely <em>inspired</em> by one.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 3: MNIST Introduction -->
+            <section class="slide" data-slide="3">
+                <div class="slide-content">
+                    <div class="two-column">
+                        <div>
+                            <h2>The MNIST Dataset</h2>
+                            <p style="margin-bottom: 1.5rem;">
+                                Neural networks are special because they are <strong>trainable</strong>.
+                            </p>
+                            <p>
+                                <strong>MNIST</strong>: handwritten digit images from NIST — the dataset that made LeNet the defining CNN architecture.
+                            </p>
+                        </div>
+                        <div class="image-large">
+                            <div class="image-container">
+                                <img src="images/minst.jpg" alt="MNIST dataset sample grid">
+                            </div>
+                            <div class="image-caption">MNIST handwritten digit samples</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 4: MNIST Details -->
+            <section class="slide" data-slide="4">
+                <div class="slide-content">
+                    <div class="two-column" style="align-items: center;">
+                        <div class="image-large" style="max-width: 520px;">
+                            <div class="image-container">
+                                <img src="images/number3_1.png" alt="Handwritten digit 3">
+                            </div>
+                            <div class="image-caption">A single MNIST digit (28 × 28 pixels)</div>
+                        </div>
+                        <div>
+                            <h2>28 × 28 Grayscale Images</h2>
+                            <p style="margin-bottom: 2rem;">
+                                Each pixel: <strong>0–255</strong>. Total: <strong>784 pixels</strong> per image.
+                            </p>
+                            <div class="math-block" style="text-align: left;">
+                                $$\text{width} = 28 \quad \text{height} = 28 \quad \text{channels} = 1$$
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 5: Pixel Similarity - Human vs Computer -->
+            <section class="slide" data-slide="5">
+                <div class="slide-content">
+                    <h2>Human vs. Computer Perception</h2>
+                    <p style="margin-bottom: 2rem;">
+                        We instantly see "3". A computer sees three completely different images.
+                    </p>
+                    
+                    <div class="image-grid" style="max-width: 700px; margin: 0 auto;">
+                        <div>
+                            <div class="image-container" style="aspect-ratio: 1; display: flex; align-items: center; justify-content: center;">
+                                <img src="images/number3_1.png" alt="Handwritten digit 3, sample 1" style="width: 85%; height: 85%; object-fit: contain;">
+                            </div>
+                            <div class="image-caption">Sample 1</div>
+                        </div>
+                        <div>
+                            <div class="image-container" style="aspect-ratio: 1; display: flex; align-items: center; justify-content: center;">
+                                <img src="images/number3_2.png" alt="Handwritten digit 3, sample 2" style="width: 85%; height: 85%; object-fit: contain;">
+                            </div>
+                            <div class="image-caption">Sample 2</div>
+                        </div>
+                        <div>
+                            <div class="image-container" style="aspect-ratio: 1; display: flex; align-items: center; justify-content: center;">
+                                <img src="images/number3_3.png" alt="Handwritten digit 3, sample 3" style="width: 85%; height: 85%; object-fit: contain;">
+                            </div>
+                            <div class="image-caption">Sample 3</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 6: 3 vs 7 -->
+            <section class="slide" data-slide="6">
+                <div class="slide-content" style="text-align: center; align-items: center;">
+                    <h2>How Do We Distinguish 3 from 7?</h2>
+                    <p style="margin-bottom: 3rem;">
+                        Given 28 × 28 grayscale grids — how do we tell them apart?
+                    </p>
+                    
+                    <div class="flowchart" style="zoom: 1.5; margin: 0.3rem 0;">
+                        <div class="fc-node">
+                            <div class="fc-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                            </div>
+                            <div class="fc-label">Given Image</div>
+                            <div class="fc-thumb">
+                                <img src="images/number3_1.png" alt="Handwritten digit">
+                            </div>
+                        </div>
+                        <div class="fc-arrow">→</div>
+                        <div class="fc-node fc-system">
+                            <div class="fc-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                    <line x1="8" y1="21" x2="16" y2="21"/>
+                                    <line x1="12" y1="17" x2="12" y2="21"/>
+                                </svg>
+                            </div>
+                            <div class="fc-label">System</div>
+                        </div>
+                        <div class="fc-arrow">→</div>
+                        <div class="fc-split">
+                            <div class="fc-outputs">
+                                <div class="fc-node fc-out-3">
+                                    <div class="fc-thumb">
+                                        <img src="images/number3_3.png" alt="Digit 3">
+                                    </div>
+                                    <div class="fc-tag">Digit 3</div>
+                                </div>
+                                <div class="fc-node fc-out-7">
+                                    <div class="fc-thumb">
+                                        <img src="images/number7.png" alt="Digit 7">
+                                    </div>
+                                    <div class="fc-tag">Digit 7</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 7: Pixel Similarity -->
+            <section class="slide slide-title" data-slide="7">
+                <div class="slide-content" style="align-items: center; text-align: center;">
+                    <h2 style="font-size: clamp(2rem, 4vw, 3.5rem);">Pixel Similarity</h2>
+                    <div class="accent-line"></div>
+                    <p style="font-size: clamp(1.2rem, 2vw, 1.6rem); max-width: 60ch;">
+                        The simplest method: compare pixels to a reference image — classify by closest match.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Slide 8: SGD -->
+            <section class="slide placeholder-slide" data-slide="8">
+                <div class="slide-content" style="align-items: center; text-align: center;">
+                    <h2>Stochastic Gradient Descent</h2>
+                    <div class="tbd-box">TBD</div>
+                    <p style="color: var(--text-muted);">
+                        How neural networks learn from data.
+                    </p>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Navigation Controls -->
+        <div class="nav-controls">
+            <button class="nav-btn" id="prevBtn" aria-label="Previous slide">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <div class="slide-counter">
+                <span class="current" id="currentSlide">1</span> / <span id="totalSlides">8</span>
+            </div>
+            <button class="nav-btn" id="nextBtn" aria-label="Next slide">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+        </div>
+
+        <div class="progress-bar" id="progressBar" style="width: 12.5%;"></div>
+        
+        <div class="keyboard-hint visible" id="keyboardHint">
+            Use <kbd style="font-family: inherit; background: var(--bg-card); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border);">←</kbd> <kbd style="font-family: inherit; background: var(--bg-card); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border);">→</kbd> arrow keys to navigate
+        </div>
+    </div>
+
+    <script>
+        // Presentation logic
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlideIndex = 0;
+
+        const currentSlideEl = document.getElementById('currentSlide');
+        const totalSlidesEl = document.getElementById('totalSlides');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+        const keyboardHint = document.getElementById('keyboardHint');
+
+        totalSlidesEl.textContent = totalSlides;
+
+        function updateSlide(index) {
+            // Wrap around if needed
+            if (index < 0) index = 0;
+            if (index >= totalSlides) index = totalSlides - 1;
+            
+            currentSlideIndex = index;
+
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active', 'prev');
+                if (i === currentSlideIndex) {
+                    slide.classList.add('active');
+                } else if (i < currentSlideIndex) {
+                    slide.classList.add('prev');
+                }
+            });
+
+            currentSlideEl.textContent = currentSlideIndex + 1;
+            prevBtn.disabled = currentSlideIndex === 0;
+            nextBtn.disabled = currentSlideIndex === totalSlides - 1;
+            progressBar.style.width = ((currentSlideIndex + 1) / totalSlides * 100) + '%';
+
+            // Re-render math for the active slide in case of dynamic content
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(slides[currentSlideIndex], {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlides - 1) {
+                updateSlide(currentSlideIndex + 1);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlideIndex > 0) {
+                updateSlide(currentSlideIndex - 1);
+            }
+        }
+
+        // Event listeners
+        prevBtn.addEventListener('click', prevSlide);
+        nextBtn.addEventListener('click', nextSlide);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                updateSlide(0);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                updateSlide(totalSlides - 1);
+            }
+        });
+
+        // Touch/swipe support
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const threshold = 50;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > threshold) {
+                if (diff > 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            }
+        }
+
+        // Hide keyboard hint after first interaction
+        let hintHidden = false;
+        function hideHint() {
+            if (!hintHidden) {
+                keyboardHint.classList.remove('visible');
+                hintHidden = true;
+            }
+        }
+        document.addEventListener('keydown', hideHint);
+        document.addEventListener('click', hideHint);
+        document.addEventListener('touchstart', hideHint);
+
+        // Initialize KaTeX auto-render when ready
+        document.addEventListener("DOMContentLoaded", function() {
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+            updateSlide(0);
+        });
+
+        // Also try if already loaded
+        if (typeof renderMathInElement !== 'undefined') {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ],
+                throwOnError: false
+            });
+        }
+    </script>
+</body>
+</html>
