@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neural Networks, Neurons & MNIST</title>
+    <title>Neural Networks, Neurons &amp; MNIST</title>
     
     <!-- KaTeX for math rendering -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -13,7 +13,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Source+Sans+3:ital,wght@0,300;0,400;0,600;1,400&amp;display=swap" rel="stylesheet">
 
     <style>
         :root {
@@ -320,6 +320,20 @@
             object-fit: contain;
         }
 
+        .image-wide .image-container {
+            aspect-ratio: 4 / 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .image-wide .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
         /* Comparison layout */
         .comparison {
             display: grid;
@@ -494,95 +508,375 @@
 
         /* Flowchart */
         .flowchart {
-            display: inline-flex;
+            display: grid;
+            grid-template-columns: minmax(220px, 250px) 72px minmax(250px, 320px) 72px minmax(280px, 340px);
             align-items: center;
             justify-content: center;
-            gap: 0.75rem;
+            gap: 1rem;
+            width: min(1180px, 100%);
             margin-top: 2rem;
-            flex-wrap: wrap;
         }
 
-        .fc-node {
-            background: var(--bg-card);
+        .flow-stage {
+            position: relative;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
             border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 0.9rem 1.1rem;
+            border-radius: 24px;
+            padding: 1.35rem 1.3rem;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 0.4rem;
-            min-width: 100px;
+            gap: 0.85rem;
+            min-height: 285px;
             backdrop-filter: blur(10px);
             text-align: center;
+            box-shadow: 0 22px 50px rgba(0, 0, 0, 0.22);
         }
 
-        .fc-node .fc-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: var(--bg-secondary);
+        .flow-stage::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.07), transparent 55%);
+            pointer-events: none;
+        }
+
+        .flow-stage-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.86rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .flow-thumb-large {
+            width: 150px;
+            height: 150px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(0, 0, 0, 0.28);
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+        }
+
+        .flow-thumb-large img {
+            width: 82%;
+            height: 82%;
+            object-fit: contain;
+        }
+
+        .flow-copy {
+            font-size: 0.98rem;
+            line-height: 1.6;
             color: var(--text-secondary);
+            max-width: 26ch;
         }
 
-        .fc-node.fc-system {
-            background: rgba(255, 255, 255, 0.08);
+        .flow-link {
+            position: relative;
+            height: 2px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.14));
+        }
+
+        .flow-link::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            border-top: 2px solid rgba(255, 255, 255, 0.75);
+            border-right: 2px solid rgba(255, 255, 255, 0.75);
+            transform: translateY(-50%) rotate(45deg);
+        }
+
+        .flow-system {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.05));
             border-color: var(--accent);
-            box-shadow: 0 0 25px rgba(255, 255, 255, 0.08);
-            padding: 1.1rem 1.5rem;
+            box-shadow: 0 0 35px rgba(255, 255, 255, 0.08);
         }
 
-        .fc-node.fc-system .fc-icon {
+        .flow-system-icon {
+            width: 62px;
+            height: 62px;
+            border-radius: 18px;
             background: rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: var(--accent);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
         }
 
-        .fc-node .fc-label {
+        .decision-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 0.85rem;
+            font-size: 0.78rem;
             font-weight: 600;
+            letter-spacing: 0.04em;
             color: var(--text-primary);
         }
 
-        .fc-arrow {
-            color: var(--text-muted);
-            font-size: 1.5rem;
-            line-height: 1;
-            font-family: 'Space Grotesk', sans-serif;
-            user-select: none;
+        .decision-pill .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 14px var(--accent-glow);
         }
 
-        .fc-split {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .fc-outputs {
+        .candidate-stack {
             display: flex;
             flex-direction: column;
-            gap: 0.6rem;
+            gap: 0.9rem;
+            width: 100%;
         }
 
-        .fc-node.fc-out-3 {
-            border-color: rgba(200, 200, 200, 0.3);
-            background: rgba(200, 200, 200, 0.05);
+        .candidate-card {
+            display: grid;
+            grid-template-columns: 70px 1fr auto;
+            align-items: center;
+            gap: 0.95rem;
+            padding: 0.9rem 1rem;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.11);
+            background: rgba(255, 255, 255, 0.04);
+            text-align: left;
         }
 
-        .fc-node.fc-out-3 .fc-tag {
-            color: var(--success);
+        .candidate-card.is-primary {
+            border-color: rgba(255, 255, 255, 0.24);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 24px rgba(255, 255, 255, 0.05);
         }
 
-        .fc-node.fc-out-7 {
-            border-color: rgba(150, 150, 150, 0.25);
-            background: rgba(150, 150, 150, 0.03);
+        .candidate-thumb {
+            width: 70px;
+            height: 70px;
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
 
-        .fc-node.fc-out-7 .fc-tag {
-            color: var(--warning);
+        .candidate-thumb img {
+            width: 82%;
+            height: 82%;
+            object-fit: contain;
+        }
+
+        .candidate-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.18rem;
+        }
+
+        .candidate-label {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .candidate-copy {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+        }
+
+        .candidate-badge {
+            padding: 0.38rem 0.65rem;
+            border-radius: 999px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+        }
+
+        .candidate-badge.match {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .candidate-badge.alt {
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .candidate-note {
+            margin-top: 0.35rem;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+
+        .text-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            margin-top: 2rem;
+        }
+
+        .info-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 1.4rem 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-card h3 {
+            margin-bottom: 0.6rem;
+        }
+
+        .info-card p,
+        .info-card li {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .info-card ul {
+            margin-top: 0.7rem;
+        }
+
+        .steps-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1.25rem;
+            margin-top: 2rem;
+        }
+
+        .step-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            margin-bottom: 0.9rem;
+        }
+
+        .step-heading {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 0.9rem;
+        }
+
+        .step-heading .step-number {
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+
+        .step-heading h3 {
+            margin-bottom: 0;
+        }
+
+        .step-card p {
+            font-size: 1rem;
+            line-height: 1.65;
+        }
+
+        .steps-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.6rem;
+        }
+
+        .results-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 1.8rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .result-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2.2rem, 5vw, 4rem);
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.7rem;
+        }
+
+        .result-label {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .equation-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .equation-stack .math-block {
+            margin: 0;
+        }
+
+        .code-block {
+            background: #050505;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 1.4rem 1.6rem;
+            margin-top: 1.8rem;
+            overflow: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.28);
+        }
+
+        .code-block pre {
+            margin: 0;
+            font-family: 'SFMono-Regular', 'Menlo', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #e6e6e6;
+        }
+
+        .resource-list a {
+            color: var(--text-primary);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .resource-list a:hover {
+            border-bottom-color: rgba(255, 255, 255, 0.65);
         }
 
         .fc-thumb {
@@ -666,7 +960,7 @@
                 <div class="slide-content" style="align-items: center;">
                     <h1>Neural Networks CH.1</h1>
                     <div class="accent-line"></div>
-                    <p class="subtitle">the MNIST</p>
+                    <p class="subtitle">the MNIST dataset</p>
                     <p style="margin-top: 2rem; font-size: 1rem; color: var(--text-muted);">An introduction to the building blocks of deep learning</p>
                 </div>
             </section>
@@ -706,10 +1000,10 @@
                         <div>
                             <h2>The MNIST Dataset</h2>
                             <p style="margin-bottom: 1.5rem;">
-                                Neural networks are special because they are <strong>trainable</strong>.
+                                One reason neural networks are so special is that they are <strong>trainable</strong>.
                             </p>
                             <p>
-                                <strong>MNIST</strong>: handwritten digit images from NIST — the dataset that made LeNet the defining CNN architecture.
+                                <strong>MNIST</strong>: handwritten digit images collected by the National Institute of Standards and Technology. This dataset helped make LeNet the defining CNN architecture.
                             </p>
                         </div>
                         <div class="image-large">
@@ -784,47 +1078,61 @@
                         Given 28 × 28 grayscale grids — how do we tell them apart?
                     </p>
                     
-                    <div class="flowchart" style="zoom: 1.5; margin: 0.3rem 0;">
-                        <div class="fc-node">
-                            <div class="fc-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                                    <polyline points="21 15 16 10 5 21"/>
-                                </svg>
+                    <div class="flowchart" style="margin: 0.3rem auto 0;">
+                        <div class="flow-stage">
+                            <div class="flow-stage-title">Input</div>
+                            <div class="flow-thumb-large">
+                                <img src="images/number3_1.png" alt="Handwritten digit input">
                             </div>
-                            <div class="fc-label">Given Image</div>
-                            <div class="fc-thumb">
-                                <img src="images/number3_1.png" alt="Handwritten digit">
+                            <div class="flow-copy">
+                                One unknown 28 × 28 grayscale image enters the classifier.
                             </div>
                         </div>
-                        <div class="fc-arrow">→</div>
-                        <div class="fc-node fc-system">
-                            <div class="fc-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                                    <line x1="8" y1="21" x2="16" y2="21"/>
-                                    <line x1="12" y1="17" x2="12" y2="21"/>
+                        <div class="flow-link" aria-hidden="true"></div>
+                        <div class="flow-stage flow-system">
+                            <div class="flow-stage-title">Comparison System</div>
+                            <div class="flow-system-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                    <path d="M8 8h8"></path>
+                                    <path d="M8 12h8"></path>
+                                    <path d="M8 16h5"></path>
                                 </svg>
                             </div>
-                            <div class="fc-label">System</div>
+                            <div class="flow-copy">
+                                Compare pixel distances to the reference patterns for <strong>3</strong> and <strong>7</strong>.
+                            </div>
+                            <div class="decision-pill">
+                                <span class="dot"></span>
+                                Smaller distance wins
+                            </div>
                         </div>
-                        <div class="fc-arrow">→</div>
-                        <div class="fc-split">
-                            <div class="fc-outputs">
-                                <div class="fc-node fc-out-3">
-                                    <div class="fc-thumb">
-                                        <img src="images/number3_3.png" alt="Digit 3">
+                        <div class="flow-link" aria-hidden="true"></div>
+                        <div class="flow-stage">
+                            <div class="flow-stage-title">Possible Classes</div>
+                            <div class="candidate-stack">
+                                <div class="candidate-card is-primary">
+                                    <div class="candidate-thumb">
+                                        <img src="images/number3_3.png" alt="Digit 3 reference">
                                     </div>
-                                    <div class="fc-tag">Digit 3</div>
+                                    <div class="candidate-meta">
+                                        <div class="candidate-label">Digit 3</div>
+                                        <div class="candidate-copy">Closer match to the input</div>
+                                    </div>
+                                    <div class="candidate-badge match">Pick</div>
                                 </div>
-                                <div class="fc-node fc-out-7">
-                                    <div class="fc-thumb">
-                                        <img src="images/number7.png" alt="Digit 7">
+                                <div class="candidate-card">
+                                    <div class="candidate-thumb">
+                                        <img src="images/number7.png" alt="Digit 7 reference">
                                     </div>
-                                    <div class="fc-tag">Digit 7</div>
+                                    <div class="candidate-meta">
+                                        <div class="candidate-label">Digit 7</div>
+                                        <div class="candidate-copy">Alternative candidate</div>
+                                    </div>
+                                    <div class="candidate-badge alt">Else</div>
                                 </div>
                             </div>
+                            <div class="candidate-note">The classifier picks the digit whose average pattern is most similar.</div>
                         </div>
                     </div>
                 </div>
@@ -836,19 +1144,259 @@
                     <h2 style="font-size: clamp(2rem, 4vw, 3.5rem);">Pixel Similarity</h2>
                     <div class="accent-line"></div>
                     <p style="font-size: clamp(1.2rem, 2vw, 1.6rem); max-width: 60ch;">
-                        The simplest method: compare pixels to a reference image — classify by closest match.
+                        The simplest method: compare pixels to a reference image and classify by the closest match.
                     </p>
                 </div>
             </section>
 
-            <!-- Slide 8: SGD -->
-            <section class="slide placeholder-slide" data-slide="8">
-                <div class="slide-content" style="align-items: center; text-align: center;">
-                    <h2>Stochastic Gradient Descent</h2>
-                    <div class="tbd-box">TBD</div>
-                    <p style="color: var(--text-muted);">
-                        How neural networks learn from data.
+            <!-- Slide 8: Data Preparation -->
+            <section class="slide" data-slide="8">
+                <div class="slide-content">
+                    <h2>Prepare the Data</h2>
+                    <p>
+                        In Colab, we stack the training images into a rank-3 tensor, then normalize every pixel from the <strong>0-255</strong> range down to <strong>0-1</strong>.
                     </p>
+                    <div class="steps-row">
+                        <div class="step-card">
+                            <div class="step-number">1</div>
+                            <h3>Stack</h3>
+                            <p>Combine many 28 × 28 images into one tensor with <code>torch.stack</code>.</p>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-number">2</div>
+                            <h3>Normalize</h3>
+                            <p>Scale raw grayscale values so the model works with a cleaner numeric range.</p>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-number">3</div>
+                            <h3>Average</h3>
+                            <p>Use the mean across training images to build a "perfect 3" and a "perfect 7".</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 9: Perfect Digits -->
+            <section class="slide" data-slide="9">
+                <div class="slide-content">
+                    <h2>The "Perfect" Digit Idea</h2>
+                    <div class="comparison-wrapper">
+                        <div class="comparison-item">
+                            <div class="image-container">
+                                <img src="images/number3_1.png" alt="Reference digit 3">
+                            </div>
+                            <h3>Perfect 3</h3>
+                            <p style="margin: 0 auto;">Average pixel values across all the training 3s.</p>
+                        </div>
+                        <div class="comparison-item">
+                            <div class="image-container">
+                                <img src="images/number7.png" alt="Reference digit 7">
+                            </div>
+                            <h3>Perfect 7</h3>
+                            <p style="margin: 0 auto;">Average pixel values across all the training 7s.</p>
+                        </div>
+                        <div class="vs-divider">Compare</div>
+                    </div>
+                    <div class="note">
+                        Given a new image, we measure its distance to both templates. If it is closer to the "perfect 3," we classify it as a 3.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 10: Distance Metrics -->
+            <section class="slide" data-slide="10">
+                <div class="slide-content">
+                    <h2>Measure Distance Pixel by Pixel</h2>
+                    <p>
+                        Since images are just numbers, we can compare each pixel in the given image with the corresponding pixel in the reference image.
+                    </p>
+                    <div class="math-row">
+                        <div class="math-block">
+                            $$L_1 = \text{mean}(|x - y|)$$
+                        </div>
+                        <div class="math-block">
+                            $$L_2 = \sqrt{\text{mean}((x - y)^2)}$$
+                        </div>
+                    </div>
+                    <div class="text-grid">
+                        <div class="info-card">
+                            <h3>L1 Loss</h3>
+                            <p>Mean Absolute Error: take the absolute difference at every pixel, then average them.</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>L2 Loss</h3>
+                            <p>Root Mean Squared Error: square the differences first, so larger mistakes count more.</p>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1.5rem;">Could we use a sum instead of a mean? Sort of yes and no, but the mean keeps the scale easier to compare.</p>
+                </div>
+            </section>
+
+            <!-- Slide 11: Results and Limitation -->
+            <section class="slide" data-slide="11">
+                <div class="slide-content">
+                    <h2>A Cool Baseline, But Still Fixed</h2>
+                    <p>
+                        The simple pixel similarity algorithm works surprisingly well, but it is still just memorizing an average pattern.
+                    </p>
+                    <div class="results-row">
+                        <div class="result-card">
+                            <div class="result-value">91%</div>
+                            <div class="result-label">Accuracy for identifying 3s</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-value">95%</div>
+                            <div class="result-label">Accuracy across all digits</div>
+                        </div>
+                    </div>
+                    <div class="note">
+                        <strong>The catch:</strong> this system does not improve by itself. If we want a model that can learn, we need trainable parameters and a loss function.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 12: Loss Function -->
+            <section class="slide" data-slide="12">
+                <div class="slide-content">
+                    <h2>Loss Function</h2>
+                    <p>
+                        A loss function, also called a cost function, tells us how well the neural network is achieving the goal.
+                    </p>
+                    <div class="math-block" style="margin-top: 2rem;">
+                        $$C(w,b) \equiv \frac{1}{2n} \sum_x \|y(x) - a\|^2$$
+                    </div>
+                    <div class="text-grid">
+                        <div class="info-card">
+                            <h3>What the symbols mean</h3>
+                            <ul>
+                                <li><strong>w</strong>: all weights</li>
+                                <li><strong>b</strong>: all biases</li>
+                                <li><strong>n</strong>: number of training samples</li>
+                            </ul>
+                        </div>
+                        <div class="info-card">
+                            <h3>Prediction vs. truth</h3>
+                            <ul>
+                                <li><strong>x</strong>: input sample</li>
+                                <li><strong>y(x)</strong>: true value</li>
+                                <li><strong>a</strong>: network prediction</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1.5rem;">Training is the process of finding weights and biases that minimize this quadratic cost.</p>
+                </div>
+            </section>
+
+            <!-- Slide 13: Gradient Descent Intuition -->
+            <section class="slide" data-slide="13">
+                <div class="slide-content">
+                    <h2>Gradient Descent Intuition</h2>
+                    <div class="two-column" style="align-items: start; margin-top: 1.4rem;">
+                        <div class="image-wide">
+                            <div class="image-container">
+                                <img src="images/gradient.png" alt="Gradient descent surface illustration">
+                            </div>
+                        </div>
+                        <div>
+                            <p>
+                                Imagine standing on a mountain in the dark, trying to reach the lowest point in the valley.
+                            </p>
+                            <div class="steps-stack">
+                                <div class="step-card">
+                                    <div class="step-heading">
+                                        <div class="step-number">1</div>
+                                        <h3>Feel the Slope</h3>
+                                    </div>
+                                 </div>
+                                <div class="step-card">
+                                    <div class="step-heading">
+                                        <div class="step-number">2</div>
+                                        <h3>Step Downhill</h3>
+                                    </div>
+                                  </div>
+                                <div class="step-card">
+                                    <div class="step-heading">
+                                        <div class="step-number">3</div>
+                                        <h3>Repeat</h3>
+                                    </div>
+                               </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 14: Derivative Example -->
+            <section class="slide" data-slide="14">
+                <div class="slide-content">
+                    <h2>A Simple Example: $f(x)=x^2$</h2>
+                    <p style="margin-top: 1.2rem;">
+                        The derivative tells us how rapidly the function changes at a particular point.
+                    </p>
+                    <div class="image-wide" style="margin: 1rem auto 0; max-width: 960px;">
+                        <div class="image-container" style="padding: 0.6rem; aspect-ratio: auto;">
+                            <img src="images/parabola_x_squared.png" alt="Parabola x squared with gradient directions" style="width: 100%; height: auto; object-fit: contain;">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 15: Parameter Updates -->
+            <section class="slide" data-slide="15">
+                <div class="slide-content">
+                    <h2>From Derivatives to Gradients</h2>
+                    <p>
+                        In higher dimensions, a derivative becomes a gradient: a vector containing the derivative with respect to every parameter.
+                    </p>
+                    <div class="math-row" style="align-items: stretch;">
+                        <div class="math-block" style="flex: 1.2;">
+                            $$\nabla C =
+                            \left(
+                            \frac{\partial C}{\partial w_1},
+                            \frac{\partial C}{\partial w_2},
+                            \cdots,
+                            \frac{\partial C}{\partial b}
+                            \right)$$
+                        </div>
+                        <div style="flex: 0.8; display: flex; flex-direction: column; gap: 1rem;">
+                            <div class="math-block">
+                                $$w = w - \eta \frac{\partial C}{\partial w}$$
+                            </div>
+                            <div class="math-block">
+                                $$b = b - \eta \frac{\partial C}{\partial b}$$
+                            </div>
+                        </div>
+                    </div>
+                    <div class="note">
+                        The learning rate <strong>$\eta$</strong> controls how large each update step will be.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 16: Implementing the NN -->
+            <section class="slide" data-slide="16">
+                <div class="slide-content">
+                    <h2>Implementing the Neural Network</h2>
+                    <p>The next step is turning the ideas into code: define the layers, initialize parameters, and build the training loop.</p>
+                    <div class="code-block">
+<pre><code>import numpy as np
+
+class NN:
+    def __init__(self, layer_sizes, seed=42):
+        self.layer_sizes = layer_sizes
+        self.num_layers = len(layer_sizes)</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 17: Resources -->
+            <section class="slide" data-slide="17">
+                <div class="slide-content">
+                    <h2>Good Learning Resources</h2>
+                    <ul class="resource-list" style="margin-top: 2rem;">
+                        <li><a href="http://neuralnetworksanddeeplearning.com/chap1.html">neuralnetworksanddeeplearning.com/chap1.html</a></li>
+                        <li><a href="https://www.bilibili.com/video/BV18m411S79t">Bilibili video: BV18m411S79t</a></li>
+                    </ul>
                 </div>
             </section>
 
@@ -862,7 +1410,7 @@
                 </svg>
             </button>
             <div class="slide-counter">
-                <span class="current" id="currentSlide">1</span> / <span id="totalSlides">8</span>
+                <span class="current" id="currentSlide">1</span> / <span id="totalSlides">17</span>
             </div>
             <button class="nav-btn" id="nextBtn" aria-label="Next slide">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -871,7 +1419,7 @@
             </button>
         </div>
 
-        <div class="progress-bar" id="progressBar" style="width: 12.5%;"></div>
+        <div class="progress-bar" id="progressBar" style="width: 5.9%;"></div>
         
         <div class="keyboard-hint visible" id="keyboardHint">
             Use <kbd style="font-family: inherit; background: var(--bg-card); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border);">←</kbd> <kbd style="font-family: inherit; background: var(--bg-card); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border);">→</kbd> arrow keys to navigate

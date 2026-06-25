@@ -1,4 +1,4 @@
-# Neural Network CH.1 MINST
+# Neural Network CH.1 MNIST
 
 ## Prologue
 
@@ -17,15 +17,15 @@ A neuron accepts multiple inputs and outputs a single value through the mathemat
 
 To be noticed, this neuron is not biological neuron, it is merely inspired by how biological brains work.
 
-## MINST
+## MNIST
 
 why neural networks are so special? One reason for that is neural networks are trainable.
 
 In this video, I'm going to use a neural network to solve a real-world problem: the MNIST problem.
 
-What is MINST? It's a dataset of handwritten digit images collected by the National Institute of Standards and Technology. This dataset helped make LeNet the defining architecture for convolutional neural networks
+What is MNIST? It's a dataset of handwritten digit images collected by the National Institute of Standards and Technology. This dataset helped make LeNet the defining architecture for convolutional neural networks
 
-![](images/minst.jpg)
+![](images/MNIST.jpg)
 
 ![](images/number3_1.png)
 
@@ -88,6 +88,8 @@ Our goal in training a neural network is to find weights and biases which minimi
 
 How to minimize the cost function, the answer is: Gradient Descent.
 
+![](videos-and-notes/1-nn-MNIST/images/gradient.png)
+
 Imagine you're standing somewhere on a mountain.
 You want to reach the lowest point in the valley.
 
@@ -148,7 +150,7 @@ class NN:
     def __init__(self, layer_sizes, seed=42):
         self.layer_sizes = layer_sizes
         self.num_layers = len(layer_sizes)
-        
+
 
 ```
 
